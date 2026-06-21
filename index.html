@@ -26,21 +26,25 @@
   }
 
   body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: relative;
     height: 100vh;
     width: 100vw;
-    padding: 2vmin 3vmin;
   }
 
   .bar {
+    position: absolute;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 3vmin;
-    width: 100%;
     flex-wrap: nowrap;
+    padding: 2vmin 3vmin;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .bar.dragging {
+    cursor: grabbing;
   }
 
   .timer {
@@ -103,30 +107,9 @@
     background: #2a2f3d;
     color: #b9bfcd;
   }
-
-  #openWindow {
-    position: fixed;
-    top: 1.5vmin;
-    right: 1.5vmin;
-    width: clamp(24px, 6vmin, 36px);
-    height: clamp(24px, 6vmin, 36px);
-    background: #1b1f2a;
-    color: #7d8493;
-    opacity: 0.7;
-    box-shadow: none;
-  }
-
-  #openWindow svg {
-    width: 50%;
-    height: 50%;
-  }
 </style>
 </head>
 <body>
-
-  <button id="openWindow" aria-label="Abrir em nova janela" title="Abrir em nova janela">
-    <svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3z"/></svg>
-  </button>
 
   <div class="bar">
     <button id="reset" aria-label="Reiniciar">
@@ -207,11 +190,62 @@
 
   btnReset.addEventListener('click', reset);
 
-  document.getElementById('openWindow').addEventListener('click', () => {
-    window.open(window.location.href, '_blank');
+  document.addEventListener('dblclick', e => e.preventDefault());
+
+  // --- Arrastar livremente pela tela ---
+  const bar = document.querySelector('.bar');
+  let dragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  function centerBar() {
+    const rect = bar.getBoundingClientRect();
+    const left = (window.innerWidth - rect.width) / 2;
+    const top = (window.innerHeight - rect.height) / 2;
+    bar.style.left = `${left}px`;
+    bar.style.top = `${top}px`;
+  }
+
+  function moveBarTo(x, y) {
+    const rect = bar.getBoundingClientRect();
+    const maxLeft = window.innerWidth - rect.width;
+    const maxTop = window.innerHeight - rect.height;
+    const left = clamp(x - offsetX, 0, Math.max(maxLeft, 0));
+    const top = clamp(y - offsetY, 0, Math.max(maxTop, 0));
+    bar.style.left = `${left}px`;
+    bar.style.top = `${top}px`;
+  }
+
+  bar.addEventListener('pointerdown', (e) => {
+    // Não inicia o drag se o toque começou em cima de um botão
+    if (e.target.closest('button')) return;
+    dragging = true;
+    bar.classList.add('dragging');
+    const rect = bar.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    bar.setPointerCapture(e.pointerId);
   });
 
-  document.addEventListener('dblclick', e => e.preventDefault());
+  bar.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    moveBarTo(e.clientX, e.clientY);
+  });
+
+  function stopDrag() {
+    dragging = false;
+    bar.classList.remove('dragging');
+  }
+
+  bar.addEventListener('pointerup', stopDrag);
+  bar.addEventListener('pointercancel', stopDrag);
+
+  window.addEventListener('resize', centerBar);
+  centerBar();
 </script>
 </body>
 </html>
