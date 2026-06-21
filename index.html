@@ -99,9 +99,30 @@
     background: #2a2f3d;
     color: #b9bfcd;
   }
+
+  #openWindow {
+    position: fixed;
+    top: 1.5vmin;
+    right: 1.5vmin;
+    width: clamp(24px, 6vmin, 36px);
+    height: clamp(24px, 6vmin, 36px);
+    background: #1b1f2a;
+    color: #7d8493;
+    opacity: 0.7;
+    box-shadow: none;
+  }
+
+  #openWindow svg {
+    width: 50%;
+    height: 50%;
+  }
 </style>
 </head>
 <body>
+
+  <button id="openWindow" aria-label="Abrir em nova janela" title="Abrir em nova janela">
+    <svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3z"/></svg>
+  </button>
 
   <div class="bar">
     <button id="reset" aria-label="Reiniciar">
@@ -181,6 +202,10 @@
   });
 
   btnReset.addEventListener('click', reset);
+
+  document.getElementById('openWindow').addEventListener('click', () => {
+    window.open(window.location.href, '_blank');
+  });
 
   document.addEventListener('dblclick', e => e.preventDefault());
 </script>
